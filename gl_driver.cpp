@@ -31,8 +31,7 @@ int recv_state = STATE_INIT;
 
 uint8_t comm_type;
 serial::Serial* serial_port;
-int sockfd;
-struct sockaddr_in gl_addr, pc_addr;
+UDP* udp;
 
 uint8_t read_cs;
 uint8_t write_cs;
@@ -44,49 +43,26 @@ std::vector<uint8_t> recv_packet;
 std::mutex mut;
 std::vector<uint8_t> serial_num;
 std::vector<std::vector<uint8_t>> lidar_data;
-Gl::framedata_t frame_data_in;
+GL::framedata_t frame_data_in;
 
 
 //////////////////////////////////////////////////////////////
 // Constructor and Deconstructor for GL Class
 //////////////////////////////////////////////////////////////
 
-Gl::Gl(std::string& gl_udp_ip, int gl_udp_port, int pc_udp_port)
+GL::GL(std::string& gl_udp_ip, int gl_udp_port, int pc_udp_port)
 {
     comm_type = COMM_UDP;
 
-    if ( (sockfd=socket(AF_INET, SOCK_DGRAM, 0)) == -1 ) 
-    { 
-		perror("[ERROR] Socket creation failed"); 
-		exit(EXIT_FAILURE); 
-	} 
+    udp = new UDP(gl_udp_ip, gl_udp_port, pc_udp_port);
+    if(udp->isOpen()) std::cout << "GL UDP is opened." << std::endl;
+    else std::cout << "[ERROR] GL UDP is not opened." << std::endl;
 
-	memset(&gl_addr, 0, sizeof(gl_addr)); 
-	gl_addr.sin_family = AF_INET; 
-	gl_addr.sin_port = htons(gl_udp_port); 
-    const char * c = gl_udp_ip.c_str();
-	gl_addr.sin_addr.s_addr = inet_addr(c);
-
-    memset(&pc_addr, 0, sizeof(pc_addr)); 
-	pc_addr.sin_family = AF_INET; 
-	pc_addr.sin_port = htons(pc_udp_port); 
-    pc_addr.sin_addr.s_addr = htonl( INADDR_ANY );
-
-    if ( bind(sockfd,(struct sockaddr *)&pc_addr,sizeof(pc_addr)) == -1 ) 
-    { 
-		perror("[ERROR] Bind failed"); 
-		exit(EXIT_FAILURE); 
-	} 
-    
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-    std::cout << "Socket START [" << sockfd << "]" << std::endl;
-
-    th = std::thread(&Gl::ThreadCallBack,this);
+    th = std::thread(&GL::ThreadCallBack,this);
 }
 
 
-Gl::Gl(std::string& gl_serial_name, uint32_t gl_serial_baudrate)
+GL::GL(std::string& gl_serial_name, uint32_t gl_serial_baudrate)
 {
     comm_type = COMM_SERIAL;
 
@@ -94,26 +70,26 @@ Gl::Gl(std::string& gl_serial_name, uint32_t gl_serial_baudrate)
     if(serial_port->isOpen()) std::cout << "GL Serial is opened." << std::endl;
     else std::cout << "[ERROR] GL Serial is not opened." << std::endl;
 
-    th = std::thread(&Gl::ThreadCallBack,this);
+    th = std::thread(&GL::ThreadCallBack,this);
 }
 
 
-Gl::~Gl()
+GL::~GL()
 {
     SetFrameDataEnable(false);
     thread_running = false;
+    th.join();
 
     if(comm_type==COMM_SERIAL)
     {
         serial_port->close();
         delete serial_port;
+        std::cout << "Serial END" << std::endl;
     }
     else if(comm_type==COMM_UDP)
     {
-        close(sockfd); 
+        delete udp;
     }
-
-    std::cout << "Socket END" << std::endl;
 }
 
 
@@ -173,7 +149,7 @@ void WritePacket(uint8_t PI, uint8_t PL, uint8_t SM, uint8_t CAT0, uint8_t CAT1,
     write(write_cs_get());
 
     if(comm_type==COMM_SERIAL) SendPacket(send_packet);
-    else if(comm_type==COMM_UDP) sendto(sockfd, &send_packet[0], send_packet.size(), MSG_CONFIRM, (const struct sockaddr *) &gl_addr, sizeof(gl_addr));
+    else if(comm_type==COMM_UDP) udp->SendPacket(send_packet);
 }
 
 
@@ -223,7 +199,7 @@ void FrameData(const std::vector<uint8_t>& recv_data, uint8_t PI, uint8_t PL, ui
             return;
         } 
 
-        Gl::framedata_t frame_data;
+        GL::framedata_t frame_data;
         frame_data.distance.resize(frame_data_size);
         frame_data.pulse_width.resize(frame_data_size);
         frame_data.angle.resize(frame_data_size);
@@ -393,7 +369,7 @@ void AddPacketElement(uint8_t data)
 }
 
 
-void Gl::ThreadCallBack(void) 
+void GL::ThreadCallBack(void) 
 {
     RecvPacketClear();
 
@@ -407,7 +383,7 @@ void Gl::ThreadCallBack(void)
         else if(comm_type==COMM_UDP)
         {
             std::vector<uint8_t> recv_packet(2000);
-            int recv_len = recv(sockfd, &recv_packet[0], recv_packet.size(), MSG_WAITFORONE);
+            int recv_len = udp->RecvPacket(recv_packet);
 
             for(int i=0; i<recv_len; i++) AddPacketElement(recv_packet[i]);
         }
@@ -419,7 +395,7 @@ void Gl::ThreadCallBack(void)
 // Read GL Conditions
 //////////////////////////////////////////////////////////////
 
-std::string Gl::GetSerialNum(void)
+std::string GL::GetSerialNum(void)
 {
     uint8_t PI = 0;
     uint8_t PL = 1;
@@ -450,7 +426,7 @@ std::string Gl::GetSerialNum(void)
     return out_str;
 }
 
-void Gl::ReadFrameData(Gl::framedata_t& frame_data, bool filter_on)
+void GL::ReadFrameData(GL::framedata_t& frame_data, bool filter_on)
 {
     mut.lock();
     frame_data = frame_data_in;
@@ -477,7 +453,7 @@ void Gl::ReadFrameData(Gl::framedata_t& frame_data, bool filter_on)
 // Set GL Conditions
 //////////////////////////////////////////////////////////////
 
-void Gl::SetFrameDataEnable(bool framedata_enable)
+void GL::SetFrameDataEnable(bool framedata_enable)
 {
     uint8_t PI = 0;
     uint8_t PL = 1;

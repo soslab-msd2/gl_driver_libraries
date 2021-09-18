@@ -1,6 +1,6 @@
 
-#ifndef GLDRIVERUDP_H
-#define GLDRIVERUDP_H
+#ifndef GLDRIVER_H
+#define GLDRIVER_H
 
 #include <stdio.h> 
 #include <unistd.h> 
@@ -14,15 +14,11 @@
 #include <math.h>
 #include <mutex>
 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <arpa/inet.h> 
-#include <netinet/in.h> 
-
 #include "serial/serial.h"
+#include "udp/udp.h"
 
 
-class Gl
+class GL
 {
 public:
 	struct framedata_t
@@ -33,12 +29,12 @@ public:
 	};
 
 public:
-	Gl(std::string& gl_udp_ip, int gl_udp_port, int pc_udp_port);
-	Gl(std::string& gl_serial_name, uint32_t gl_serial_baudrate);
-	~Gl();
+	GL(std::string& gl_udp_ip, int gl_udp_port, int pc_udp_port);
+	GL(std::string& gl_serial_name, uint32_t gl_serial_baudrate);
+	~GL();
 
 	std::string GetSerialNum(void);
-	void ReadFrameData(Gl::framedata_t& frame_data, bool filter_on=true);
+	void ReadFrameData(GL::framedata_t& frame_data, bool filter_on=true);
 	void SetFrameDataEnable(bool framedata_enable);
 
 private:
