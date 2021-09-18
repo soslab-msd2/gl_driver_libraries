@@ -41,8 +41,8 @@ std::vector<uint8_t> send_packet;
 std::vector<uint8_t> recv_packet;
 
 
+std::mutex mut;
 std::vector<uint8_t> serial_num;
-
 std::vector<std::vector<uint8_t>> lidar_data;
 Gl::framedata_t frame_data_in;
 
@@ -240,7 +240,9 @@ void FrameData(const std::vector<uint8_t>& recv_data, uint8_t PI, uint8_t PL, ui
             frame_data.angle[i] = i*180.0/(frame_data_size-1)*3.141592/180.0;
         }
 
+        mut.lock();
         frame_data_in = frame_data;
+        mut.unlock();
         lidar_data.clear();
     }
 }
@@ -249,7 +251,9 @@ void SerialNum(const std::vector<uint8_t>& recv_data, uint8_t PI, uint8_t PL, ui
 {
     if(SM!=SM_GET || recv_data.size()==0) return;
 
+    mut.lock();
     serial_num = recv_data;
+    mut.unlock();
 }
 
 void ParsingData(const std::vector<uint8_t>& recv_data, uint8_t PI, uint8_t PL, uint8_t SM, uint8_t BI, uint8_t CAT0, uint8_t CAT1)
@@ -424,7 +428,9 @@ std::string Gl::GetSerialNum(void)
     uint8_t CAT1 = 0x0A;
     std::vector<uint8_t> DTn = {1};
 
+    mut.lock();
     serial_num.clear();
+    mut.unlock();
     for(size_t i=0; i<50; i++)
     {
         WritePacket(PI, PL, SM, CAT0, CAT1, DTn);
@@ -433,7 +439,9 @@ std::string Gl::GetSerialNum(void)
 
         if(serial_num.size()>0)
         {
+            mut.lock();
             std::string out_str(serial_num.begin(), serial_num.end());
+            mut.unlock();
             return out_str;
         }
     }
@@ -444,12 +452,12 @@ std::string Gl::GetSerialNum(void)
 
 void Gl::ReadFrameData(Gl::framedata_t& frame_data, bool filter_on)
 {
-    if(frame_data_in.distance.size()==0) return;
-
+    mut.lock();
     frame_data = frame_data_in;
     frame_data_in.angle.clear();
     frame_data_in.distance.clear();
     frame_data_in.pulse_width.clear();
+    mut.unlock();
     
     if(filter_on==true)
     {
