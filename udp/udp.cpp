@@ -52,7 +52,7 @@ UDP::UDP(std::string& target_udp_ip, int target_udp_port, int pc_udp_port)
     pc_addr.sin_addr.s_addr = htonl( INADDR_ANY );
 	pc_addr.sin_port = htons(pc_udp_port); 
 
-    if (bind(sockfd, (struct sockaddr*)&sockaddr_pc, sizeof(sockaddr_pc)) == SOCKET_ERROR)
+    if (bind(sockfd, (struct sockaddr*)&pc_addr, sizeof(pc_addr)) == SOCKET_ERROR)
     { 
 		std::cout << "[ERROR] Bind failed" << std::endl; 
 		return;
