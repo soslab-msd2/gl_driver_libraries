@@ -279,7 +279,7 @@ namespace gldriver
             {
                 WritePacket(PI, PL, SM, CAT0, CAT1, DTn);
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
                 if (serial_num_.size() > 0)
                 {
@@ -568,7 +568,8 @@ namespace gldriver
                 if (data == read_cs_get())
                     ParsingPayload(recv_packet_);
 
-                recv_state_ = STATE_INIT;
+                RecvPacketClear();
+                return;
             }
 
             if (recv_state_ == STATE_INIT)
