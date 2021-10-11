@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace gldriver
+namespace SOSLAB
 {
 	class GL
 	{
@@ -30,6 +30,6 @@ namespace gldriver
 		void *gl_;
 	};
 
-} /* namespace gldriver */
+} /* namespace SOSLAB */
 
 #endif

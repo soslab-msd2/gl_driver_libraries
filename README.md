@@ -8,14 +8,19 @@
 ```
 - Initialize UDP or Serial
 ```
-// UDP
-gldriver::GL* gl;
-gl = new gldriver::GL("10.110.1.2", 2000, 3000);
+// UDP : Set local IP as 10.110.1.3
+std::string gl_ip = "10.110.1.2";
+int gl_port = 2000;
+int pc_port = 3000;
+SOSLAB::GL* gl;
+gl = new SOSLAB::GL(gl_ip, gl_port, pc_port);
 ```
 ```
 // Serial
-gldriver::GL* gl;
-gl = new gldriver::GL("/dev/ttyUSB0", 921600);
+std::string gl_port = "/dev/ttyUSB0";
+int gl_baudrate = 921600;
+SOSLAB::GL* gl;
+gl = new SOSLAB::GL(gl_port, gl_baudrate);
 ```
 - Get Serial Number of GL
 ```
@@ -27,7 +32,7 @@ std::cout << "Serial Num : " << gl->GetSerialNum() << std::endl;
 gl->SetFrameDataEnable(true);
 
 // Get data
-gldriver::GL::framedata_t frame_data;
+SOSLAB::GL::framedata_t frame_data;
 gl->ReadFrameData(frame_data);
 
 //Stop stream and terminate

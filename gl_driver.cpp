@@ -15,7 +15,7 @@
 #include "serial/serial.h"
 #include "udp/udp.h"
 
-namespace gldriver
+namespace SOSLAB
 {
     enum PAYLOAD_DELIMETERS
     {
@@ -224,7 +224,7 @@ namespace gldriver
         }
 
         impl_GL(std::string &gl_serial_name, uint32_t gl_serial_baudrate)
-            : serial_port_(new serial::Serial(gl_serial_name, gl_serial_baudrate, serial::Timeout::simpleTimeout(100)))
+            : serial_port_(new serial::Serial(gl_serial_name, gl_serial_baudrate, serial::Timeout::simpleTimeout(1)))
             , udp_(nullptr)
             , thread_running_(true)
             , th_(nullptr)
@@ -617,4 +617,4 @@ namespace gldriver
         static_cast<impl_GL *>(gl_)->SetFrameDataEnable(framedata_enable);
     }
 
-} /* namespace gldriver */
+} /* namespace SOSLAB */
