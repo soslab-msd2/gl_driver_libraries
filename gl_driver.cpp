@@ -447,6 +447,7 @@ namespace SOSLAB
                     uint16_t pulse_width = data[i * 4 + 4] & 0xff;
                     pulse_width |= ((uint16_t)(data[i * 4 + 5] & 0xff)) << 8;
 
+                    if(distance>30000) distance = 0;
                     frame_data.distance[i] = distance / 1000.0;
                     frame_data.pulse_width[i] = pulse_width;
                     frame_data.angle[i] = i * 180.0 / (frame_data_size - 1) * 3.141592 / 180.0;
