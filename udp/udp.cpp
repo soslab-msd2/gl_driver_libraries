@@ -94,7 +94,7 @@ public:
         double timeout_in_seconds = 1.0;
 #ifdef _WIN32
         DWORD timeout = timeout_in_seconds * 1000;
-        setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout);
+        setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout);
 #else
         struct timeval tv;
         tv.tv_sec = timeout_in_seconds;
