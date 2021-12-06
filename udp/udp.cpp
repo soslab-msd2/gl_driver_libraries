@@ -91,6 +91,17 @@ public:
             throw exception_msg("[ERROR] Bind failed", -1);
         }
 
+        double timeout_in_seconds = 1.0;
+#ifdef _WIN32
+        DWORD timeout = timeout_in_seconds * 1000;
+        setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof timeout);
+#else
+        struct timeval tv;
+        tv.tv_sec = timeout_in_seconds;
+        tv.tv_usec = 0;
+        setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+#endif
+
         std::cout << "Socket START [" << sockfd << "]" << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         is_open = true;
