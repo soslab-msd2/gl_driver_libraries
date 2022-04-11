@@ -224,7 +224,7 @@ namespace SOSLAB
         }
 
         impl_GL(std::string &gl_serial_name, uint32_t gl_serial_baudrate)
-            : serial_port_(new serial::Serial(gl_serial_name, gl_serial_baudrate, serial::Timeout::simpleTimeout(1)))
+            : serial_port_(new serial::Serial(gl_serial_name, gl_serial_baudrate, serial::Timeout::simpleTimeout(10)))
             , udp_(nullptr)
             , thread_running_(true)
             , th_(nullptr)
